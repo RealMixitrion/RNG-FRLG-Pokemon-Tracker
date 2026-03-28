@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mixi's Pokemon Tracker</title>
+  <style>
+    :root{
+      --bg:#071225;
+      --bg2:#0b1730;
+      --panel:#101b34;
+      --panel2:#162445;
+      --text:#e8edf7;
+      --muted:#9fb0d0;
+      --accent:#66d9ef;
+      --good:#8be28b;
+      --warn:#ffcc66;
+      --warn2:#ffb454;
+      --danger:#ff7b7b;
+      --border:#2b3957;
+      --shadow:0 8px 24px rgba(0,0,0,.2);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:linear-gradient(180deg,var(--bg),var(--bg2));
+      color:var(--text);
+    }
+    .wrap{max-width:1320px;margin:24px auto;padding:0 16px 40px}
+    h1,h2,h3,p{margin-top:0}
+    .topbar{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}
+    .top-note{color:var(--muted);max-width:900px}
+    .lang-box{min-width:220px}
+    .main-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;align-items:start}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+    textarea,input,select,button{
+      width:100%;font:inherit;border-radius:12px;border:1px solid var(--border);
+      background:var(--panel2);color:var(--text);padding:12px;
+    }
+    textarea{min-height:140px;resize:vertical}
+    label{display:block;font-size:14px;color:var(--muted);margin-bottom:6px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+    button{cursor:pointer;width:auto;min-width:140px;font-weight:700}
+    button.good{background:#173d2b;border-color:#2e6c4a}
+    button.warn{background:#4b3815;border-color:#7b5b21}
+    button.danger{background:#4a1d28;border-color:#7d2e41}
+    button.shiny{
+      background:linear-gradient(135deg,#5a4a0c,#7a6412);
+      border-color:#b08e1b;color:#fff5c2;min-width:220px;padding:14px 18px;font-size:16px
+    }
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--border)}
+    .pill.hunting{background:#15384f;color:#98e8ff}
+    .pill.hitting{background:#2e2a12;color:#ffe38c}
+    .pill.shiny{background:#4b3d09;color:#fff0a8;border-color:#8a6d10}
+    .target-box{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:start;margin-bottom:12px}
+    .sprite-card{
+      background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center;
+      min-height:170px;display:flex;flex-direction:column;justify-content:center;gap:8px
+    }
+    .sprite-card img{width:96px;height:96px;object-fit:contain;margin:0 auto;image-rendering:pixelated}
+    .target-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .stat{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:12px}
+    .stat .k{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .stat .v{font-weight:700;word-break:break-word}
+    .compare{margin-top:14px;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--panel2)}
+    .diff-good{color:var(--good);font-weight:700}
+    .diff-yellow{color:var(--warn);font-weight:700}
+    .diff-orange{color:var(--warn2);font-weight:700}
+    .diff-bad{color:var(--danger);font-weight:700}
+    .status-box{margin-top:14px;padding:14px;border-radius:12px;border:1px solid var(--border);background:var(--panel2);font-size:14px;line-height:1.45}
+    .status-box.ok{border-color:#2f6a49;background:rgba(23,61,43,.45);color:#d5ffe0}
+    .status-box.error{border-color:#7d2e41;background:rgba(74,29,40,.45);color:#ffd7de;font-weight:700}
+    .instructions{background:rgba(102,217,239,.08);border:1px solid rgba(102,217,239,.25);border-radius:14px;padding:14px;line-height:1.55;color:#d7eefe;margin-bottom:16px}
+    .instructions strong{color:#fff}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+    .tab-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);min-width:160px}
+    .tab-btn.active{background:#1d3656;border-color:#31527e}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+    table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}
+    th,td{border-bottom:1px solid var(--border);padding:10px 8px;text-align:left;vertical-align:top}
+    th{color:var(--muted);font-size:12px}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .smallbtn{padding:8px 10px;border-radius:10px;width:auto;min-width:0}
+    .seed-exact,.frame-exact{color:var(--good);font-weight:700}
+    .seed-exact::before,.frame-exact::before{content:"✓ "}
+    .frame-close-1{color:var(--warn);font-weight:700}
+    .frame-close-2{color:var(--warn2);font-weight:700}
+    .help{font-size:13px;color:var(--muted);line-height:1.45}
+    .reset-note{margin-top:10px;color:#f6e39b;font-size:13px}
+    @media (max-width:980px){
+      .main-grid,.row,.target-box,.target-stats{grid-template-columns:1fr}
+      table{display:block;overflow-x:auto;white-space:nowrap}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">Mixi's Pokemon Tracker</h1>
+        <div id="versionBadge" style="display:inline-block;margin-top:6px;padding:4px 10px;border:1px solid #2b3957;border-radius:999px;background:#162445;color:#9fb0d0;font-size:12px;">Version 1.0</div>
+        <p class="top-note" id="topNote">Built for <strong>Ten Lines</strong> results from <strong>Pokémon FireRed / LeafGreen on Nintendo Switch 1 and Switch 2</strong>. Paste a result, choose whether it is what you are hunting or what you are hitting, then save it. <span id="versionLabel" style="opacity:.8;">Version 1.0</span></p>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <section class="card">
+        <h2 id="addEntryTitle">Add Entry</h2>
+
+        <label for="tenLinesInput" id="pasteLabel">Paste Ten Lines result line/block</label>
+        <textarea id="tenLinesInput" placeholder="Example: FC3F | 30789ms (+0ms)	1941	941	1: Doduo	24	CCC93F7C	No	Brave	0: Run Away	6/25/15/6/17/2	Water	48	♀"></textarea>
+
+        <div class="row" id="staticPickerRow" style="display:none;">
+          <div>
+            <label for="staticCategory" id="staticCategoryLabel">Static Category</label>
+            <select id="staticCategory">
+              <option value="">Choose category</option>
+            </select>
+          </div>
+          <div>
+            <label for="staticPokemon" id="staticPokemonLabel">Static Pokémon</label>
+            <select id="staticPokemon">
+              <option value="">Choose Pokémon</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="entryType" id="entryTypeLabel">Is this what you are hunting or what you are hitting?</label>
+            <select id="entryType">
+              <option value="hunting">Hunting</option>
+              <option value="hitting">Hitting</option>
+            </select>
+          </div>
+          <div>
+            <label for="genderDisplay" id="genderLabel">Gender found in the pasted result</label>
+            <input id="genderDisplay" placeholder="Auto-filled from the pasted result" readonly />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="msCalibration" id="msLabel">ms Calibration</label>
+            <input id="msCalibration" type="number" step="1" placeholder="Example: 1 or -5509" />
+          </div>
+          <div>
+            <label for="advCalibration" id="advLabel">Advances Calibration</label>
+            <input id="advCalibration" type="number" step="1" placeholder="Example: -5509 or 1" />
+          </div>
+        </div>
+
+        <div class="btns">
+          <button class="good" id="saveBtn">Save Entry</button>
+          <button class="warn" id="loadLastCalBtn">Use Last Calibration</button>
+          <button class="warn" id="redoHuntBtn">Redo Hunt</button>
+          <button class="danger" id="clearInputBtn">Clear Form</button>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-top:18px;">
+          <div class="btns" style="margin-top:0;">
+            <button class="shiny" id="shinyBtn">✨ Did It Shine?</button>
+          </div>
+          <div class="btns" style="margin-top:0;">
+            <button class="danger" id="clearAllBtn">Clear All</button>
+          </div>
+        </div>
+
+        <div class="reset-note" id="resetNote">When you use <strong>Did It Shine?</strong>, the shiny gets saved in its own tab and the active hunt log resets so you can start your next hunt cleanly.</div>
+        <div id="parseStatus" class="status-box">The page reads the pasted result automatically. You do not need to parse anything by hand.</div>
+      </section>
+
+      <aside>
+        <div class="instructions">
+          <h3 id="howTitle">How to use this page</h3>
+          <div id="how1"><strong>Save Entry</strong> — reads the pasted Ten Lines result automatically and saves it with your Hunting or Hitting choice.</div>
+          <div id="how2"><strong>Use Last Calibration</strong> — fills in the most recently saved ms and Advances calibration values so you do not need to type them again.</div>
+          <div id="how3"><strong>Redo Hunt</strong> — clears only the Ten Lines paste box so you can keep hunting the same target without resetting the hunt.</div>
+          <div id="how4"><strong>Clear Form</strong> — clears the current paste and form fields, but does not delete your saved logs.</div>
+          <div id="how5"><strong>Clear All</strong> — wipes the current entry and the Active Hunt Log for a completely clean slate, but keeps Shiny History.</div>
+          <div id="how6"><strong>Did It Shine?</strong> — use this when you got the shiny. It saves a shiny result based on your current hunting target, asks for the final calibrations, moves it to the Shiny History tab, and resets the active hunt log.</div>
+        </div>
+
+        <div class="card">
+          <h2 id="targetTitle">Current Hunt Target</h2>
+          <div id="targetState"><p class="help" id="noTargetText">No <strong>Hunting</strong> target saved yet. Save one and it becomes the active target reference.</p></div>
+
+          <div class="compare" id="comparisonBox">
+            <h3 id="comparisonTitle">Latest Hitting vs Current Hunting</h3>
+            <div id="comparisonContent" class="help">No comparison available yet.</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="activeLogTab" id="activeTabBtn">Active Hunt Log</button>
+      <button class="tab-btn" data-tab="shinyLogTab" id="shinyTabBtn">Shiny History</button>
+    </div>
+
+    <section id="activeLogTab" class="tab-panel active card">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
+        <div>
+          <h2 style="margin-bottom:4px;" id="activeLogTitle">Active Hunt Log</h2>
+          <div class="help" id="activeLogHelp">Seed + ms exact matches turn green. Continue Frames exact matches turn green. Close Continue Frames turn yellow or orange.</div>
+        </div>
+        <div class="btns" style="margin-top:0;">
+          <button class="warn" id="exportBtn">Export Active Log JSON</button>
+          <button class="danger" id="clearSessionBtn">Clear Active Hunt Log</button>
+        </div>
+      </div>
+      <div id="tableWrap"></div>
+    </section>
+
+    <section id="shinyLogTab" class="tab-panel card">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
+        <div>
+          <h2 style="margin-bottom:4px;" id="shinyHistoryTitle">Shiny History</h2>
+          <div class="help" id="shinyHistoryHelp">This keeps the shiny Pokémon you confirmed with the shiny button, even after the active hunt resets.</div>
+        </div>
+        <div class="btns" style="margin-top:0;">
+          <button class="warn" id="exportShinyBtn">Export Shiny History JSON</button>
+          <button class="warn" id="importShinyBtn">Import Shiny History JSON</button>
+          <button class="danger" id="clearShinyBtn">Clear Shiny History</button>
+          <input type="file" id="importShinyFile" accept=".json,application/json" style="display:none;" />
+        </div>
+      </div>
+      <div id="shinyTableWrap"></div>
+    </section>
+  </div>
+
+  <script>
+    const ACTIVE_STORAGE_KEY='pokemon_rng_tracker_v1_7_active_entries';
+    const SHINY_STORAGE_KEY='pokemon_rng_tracker_v1_7_shiny_entries';
+    const LAST_CAL_KEY='pokemon_rng_tracker_v1_7_last_calibrations';
+
+    const NATURES = new Set([
+      "Lonely","Adamant","Naughty","Brave","Bold","Impish","Lax","Relaxed",
+      "Modest","Mild","Rash","Quiet","Calm","Gentle","Careful","Sassy",
+      "Timid","Hasty","Jolly","Naive","Hardy","Docile","Bashful","Quirky","Serious"
+    ]);
+
+    const STATIC_OPTIONS = {
+      "Starters":["Bulbasaur","Charmander","Squirtle"],
+      "Fossils":["Omanyte","Kabuto","Aerodactyl"],
+      "Gifts":["Hitmonlee","Hitmonchan","Magikarp","Lapras","Eevee","Togepi"],
+      "Game Corner":["Abra","Clefairy","Pinsir","Dratini","Porygon"],
+      "Stationary":["Electrode","Snorlax","Hypno"],
+      "Legends":["Articuno","Zapdos","Moltres","Mewtwo"],
+      "Events":["Deoxys","Lugia","Ho-Oh"],
+      "Roamers":["Raikou","Entei","Suicune"]
+    };
+
+    let entries = loadStored(ACTIVE_STORAGE_KEY);
+    let shinyEntries = loadStored(SHINY_STORAGE_KEY);
+    let parsedCache = null;
+    let currentLanguage = 'en';
+    let huntModeLocked = !!getActiveHuntMode();
+
+    const tenLinesInput=document.getElementById('tenLinesInput');
+    const staticPickerRow=document.getElementById('staticPickerRow');
+    const staticCategory=document.getElementById('staticCategory');
+    const staticPokemon=document.getElementById('staticPokemon');
+    const entryType=document.getElementById('entryType');
+    const genderDisplay=document.getElementById('genderDisplay');
+    const msCalibration=document.getElementById('msCalibration');
+    const advCalibration=document.getElementById('advCalibration');
+    const parseStatus=document.getElementById('parseStatus');
+    const targetState=document.getElementById('targetState');
+    const comparisonContent=document.getElementById('comparisonContent');
+    const tableWrap=document.getElementById('tableWrap');
+    const shinyTableWrap=document.getElementById('shinyTableWrap');
+
+    const t = {
+      en: {
+        pageTitle:"Mixi's Pokemon Tracker",
+        topNote:'Built for <strong>Ten Lines</strong> results from <strong>Pokémon FireRed / LeafGreen on Nintendo Switch 1 and Switch 2</strong>. Paste a result, choose whether it is what you are hunting or what you are hitting, then save it.',
+        langLabel:"Language",
+        addEntry:"Add Entry",
+        pasteLabel:"Paste Ten Lines result line/block",
+        entryTypeLabel:"Is this what you are hunting or what you are hitting?",
+        hunting:"Hunting",
+        hitting:"Hitting",
+        genderLabel:"Gender found in the pasted result",
+        msLabel:"ms Calibration",
+        advLabel:"Advances Calibration",
+        saveBtn:"Save Entry",
+        useLast:"Use Last Calibration",
+        redoHunt:"Redo Hunt",
+        clearForm:"Clear Form",
+        clearAll:"Clear All", importShiny:"Import Shiny History JSON", versionLabel:"Version 1.0",
+        shinyBtn:"✨ Did It Shine?",
+        resetNote:'When you use <strong>Did It Shine?</strong>, the shiny gets saved in its own tab and the active hunt log resets so you can start your next hunt cleanly.',
+        idleStatus:"The page reads the pasted result automatically. You do not need to parse anything by hand.",
+        howTitle:"How to use this page",
+        how1:'<strong>Save Entry</strong> — reads the pasted Ten Lines result automatically and saves it with your Hunting or Hitting choice.',
+        how2:'<strong>Use Last Calibration</strong> — fills in the most recently saved ms and Advances calibration values so you do not need to type them again.',
+        howRedo:'<strong>Redo Hunt</strong> — clears the current Ten Lines entry and removes the Hitting rows under the current Hunting target, while keeping that Hunting target in place.',
+        how3:'<strong>Clear Form</strong> — clears the current paste and form fields, but does not delete your saved logs.',
+        howClearAll:'<strong>Clear All</strong> — wipes the current entry and the Active Hunt Log for a completely clean slate, but keeps Shiny History.',
+        how4:'<strong>Did It Shine?</strong> — use this when you got the shiny. It saves a shiny result based on your current hunting target, asks for the final calibrations, moves it to the Shiny History tab, and resets the active hunt log.',
+        staticCategoryLabel:"Static Category",
+        staticPokemonLabel:"Static Pokémon",
+        chooseCategory:"Choose category",
+        choosePokemon:"Choose Pokémon",
+        targetTitle:"Current Hunt Target",
+        targetTitleWithName:(name)=>`Current Hunt Target: ${name}`,
+        noTarget:'No <strong>Hunting</strong> target saved yet. Save one and it becomes the active target reference.',
+        comparisonTitle:"Latest Hitting vs Current Hunting",
+        noComparison:"No comparison available yet.",
+        activeTab:"Active Hunt Log",
+        shinyTab:"Shiny History",
+        activeLogTitle:"Active Hunt Log",
+        activeLogHelp:"Seed + ms exact matches turn green. Continue Frames exact matches turn green. Close Continue Frames turn yellow or orange.",
+        shinyHistoryTitle:"Shiny History",
+        shinyHistoryHelp:"This keeps the shiny Pokémon you confirmed with the shiny button, even after the active hunt resets.",
+        exportActive:"Export Active Log JSON",
+        clearActive:"Clear Active Hunt Log",
+        exportShiny:"Export Shiny History JSON",
+        clearShiny:"Clear Shiny History",
+        parseOk:"Paste read successfully. Choose Hunting or Hitting, enter calibrations, then save.",
+        saveOk:"Entry saved. You can paste the next result now.",
+        loadOk:"Loaded the last saved calibrations into the form.",
+        savePrompt1:"Congrats! 🎉 Enter the ms calibration you want to save for this shiny hit:",
+        savePrompt2:"Now enter the Advances calibration for this shiny hit:",
+        shinySaved:"Congrats on the shiny! 🎉 It was saved in Shiny History, and the active hunt log has been reset for your next hunt.",
+        shinyAlert:"Congrats on the shiny! 🎉 It was saved in Shiny History, and your active hunt log was reset.",
+        needTarget:'You need a Hunting target saved before using "Did It Shine?".',
+        needPaste:"Paste a Ten Lines result first.",
+        badLine:"Could not parse that result. Paste the raw Ten Lines line exactly as shown on the site.",
+        badSeed:"Could not parse Seed + ms from the pasted line.",
+        badFrames:"Could not parse Continue Screen Frames.",
+        badLevel:"Could not parse Level.",
+        needCal:"Enter both ms calibration and Advances calibration before saving.",
+        noLast:"No saved calibrations found yet.",
+        confirmDeleteActive:"Delete this active hunt entry?",
+        confirmDeleteShiny:"Delete this shiny history entry?",
+        confirmClearActive:"Clear the entire active hunt log?",
+        confirmClearShiny:"Clear the entire shiny history?",
+        confirmClearAll:"Clear everything? This removes the current entry and Active Hunt Log, but keeps Shiny History.", importShinySuccess:"Shiny History imported successfully.", importShinyError:"That file could not be imported as Shiny History JSON.",
+        noActive:"No active hunt entries saved yet.",
+        noShiny:"No shiny results saved yet.",
+        type:"Type", huntKind:"Static/Wild", match:"Match", seedMs:"Seed + ms", continueFrames:"Continue Screen Frames", level:"Level", gender:"Gender", nature:"Nature", species:"Pokémon", attempts:"Attempts", msCal:"ms Cal", advCal:"Adv Cal", delete:"Delete",
+        matchFound:"Match Found",
+        huntingPill:"Hunting", hittingPill:"Hitting", shinyPill:"Shiny",
+        spriteLabel:"Target Sprite",
+        spriteUnavailable:"Sprite unavailable",
+        targetSeed:"Seed + ms", targetFrames:"Continue Screen Frames", targetLevel:"Level", targetGender:"Gender", targetSpecies:"Pokémon", targetCal:"Calibrations",
+        latestHitSeed:"Latest Hit Seed + ms", seedMatch:"Seed + ms Match", framesDiff:"Continue Screen Frames Difference", levelDiff:"Level Difference", genderMatch:"Gender Match", yes:"Yes", no:"No", exact:"0 (exact match)",
+        modeLockedMsg:"To change between Static and Wild, clear the Active Hunt Log first.",
+        strictMismatch:"This pasted result does not match your current Hunting target. If your Hunting target is Static, all pasted results must also be Static. If your Hunting target is Wild, all pasted results must also be Wild.", duplicateHunting:"There is already a Hunting target in the Active Hunt Log. Use Hitting, or clear the Active Hunt Log first if you want a new Hunting target.",
+        needStaticChoice:"Choose a Static Category and Static Pokémon before saving a Static hunt.",
+        autoWild:"Wild result detected automatically.",
+        autoStatic:"Static result detected automatically."
+      }
+,
+
+      es: {
+        pageTitle:"Mixi's Pokemon Tracker",
+        versionLabel:"Versión 2.0",
+        topNote:'Hecho para resultados de <strong>Ten Lines</strong> de <strong>Pokémon FireRed / LeafGreen en Nintendo Switch 1 y Switch 2</strong>. Pega un resultado, elige si es lo que buscas o lo que estás obteniendo, y luego guárdalo.',
+        langLabel:"Idioma", addEntry:"Agregar entrada", pasteLabel:"Pega la línea o bloque de Ten Lines", entryTypeLabel:"¿Esto es lo que estás buscando o lo que estás obteniendo?", hunting:"Hunting", hitting:"Hitting",
+        genderLabel:"Género encontrado en el resultado pegado", msLabel:"Calibración de ms", advLabel:"Calibración de avances", saveBtn:"Guardar entrada", useLast:"Usar última calibración", redoHunt:"Rehacer cacería", clearForm:"Limpiar formulario", clearAll:"Borrar todo", shinyBtn:"✨ ¿Salió shiny?",
+        howTitle:"Cómo usar esta página", how2:'<strong>Usar última calibración</strong> — llena los valores de ms y avances guardados más recientemente para que no tengas que escribirlos otra vez.', howRedo:'<strong>Rehacer cacería</strong> — limpia la entrada actual de Ten Lines y elimina las filas de Hitting bajo el objetivo Hunting actual, mientras mantiene ese objetivo Hunting en su sitio.', how3:'<strong>Limpiar formulario</strong> — limpia el pegado actual y los campos del formulario, pero no borra tus registros guardados.', howClearAll:'<strong>Borrar todo</strong> — borra la entrada actual y el Registro activo para empezar desde cero, pero mantiene el Historial shiny.', how4:'<strong>¿Salió shiny?</strong> — úsalo cuando te salió el shiny. Guarda un resultado shiny usando tu objetivo actual, te pide las calibraciones finales, lo mueve al Historial shiny y reinicia el registro activo.',
+        staticCategoryLabel:"Categoría Static", staticPokemonLabel:"Pokémon Static", chooseCategory:"Elige categoría", choosePokemon:"Elige Pokémon",
+        targetTitle:"Objetivo actual de la cacería", targetTitleWithName:(name)=>`Objetivo actual de la cacería: ${name}`, noTarget:'Todavía no hay un objetivo guardado como <strong>Hunting</strong>. Guarda uno y se convertirá en la referencia activa.',
+        comparisonTitle:"Último obtenido vs objetivo actual", noComparison:"Todavía no hay comparación disponible.", activeTab:"Registro activo", shinyTab:"Historial shiny", activeLogTitle:"Registro activo", activeLogHelp:"Las coincidencias exactas de Seed + ms se ponen verdes. Las coincidencias exactas de Continue Screen Frames se ponen verdes. Los Continue Screen Frames cercanos se ponen amarillos o naranjas.", shinyHistoryTitle:"Historial shiny", shinyHistoryHelp:"Aquí se guardan los Pokémon shiny que confirmaste con el botón shiny, incluso después de reiniciar la cacería activa.", exportActive:"Exportar registro activo JSON", clearActive:"Borrar registro activo", exportShiny:"Exportar historial shiny JSON", importShiny:"Importar historial shiny JSON", clearShiny:"Borrar historial shiny",
+        type:"Tipo", huntKind:"Static/Wild", match:"Coincidencia", seedMs:"Seed + ms", continueFrames:"Continue Screen Frames", level:"Nivel", gender:"Género", species:"Pokémon", attempts:"Intentos", msCal:"Cal ms", advCal:"Cal av", delete:"Borrar", nature:"Naturaleza",
+        matchFound:"Coincidencia", huntingPill:"Hunting", hittingPill:"Hitting", shinyPill:"Shiny", spriteLabel:"Sprite objetivo", spriteUnavailable:"Sprite no disponible", targetSeed:"Seed + ms", targetFrames:"Continue Screen Frames", targetLevel:"Nivel", targetGender:"Género", targetSpecies:"Pokémon", targetCal:"Calibraciones", latestHitSeed:"Seed + ms del último obtenido", seedMatch:"Coincidencia de Seed + ms", framesDiff:"Diferencia de Continue Screen Frames", levelDiff:"Diferencia de nivel", genderMatch:"Coincidencia de género", yes:"Sí", no:"No", exact:"0 (coincidencia exacta)",
+        idleStatus:"La página lee el resultado pegado automáticamente. No tienes que analizar nada a mano.", parseOk:"Pegado leído correctamente. Elige Hunting o Hitting, escribe las calibraciones y luego guarda.", saveOk:"Entrada guardada. Ya puedes pegar el siguiente resultado.", loadOk:"Se cargaron las últimas calibraciones guardadas.", needTarget:'Necesitas guardar primero un objetivo como "Hunting" antes de usar "¿Salió shiny?".', needPaste:"Primero pega un resultado de Ten Lines.", badLine:"No se pudo analizar ese resultado. Pega la línea original de Ten Lines exactamente como aparece en el sitio.", badSeed:"No se pudo analizar Seed + ms de la línea pegada.", badFrames:"No se pudo analizar Continue Screen Frames.", badLevel:"No se pudo analizar el nivel.", needCal:"Escribe tanto la calibración de ms como la de avances antes de guardar.", noLast:"Todavía no hay calibraciones guardadas.", duplicateHunting:"Ya existe un objetivo Hunting en el Registro activo. Usa Hitting o borra primero el Registro activo si quieres un nuevo objetivo Hunting.", confirmDeleteActive:"¿Borrar esta entrada del registro activo?", confirmDeleteShiny:"¿Borrar esta entrada del historial shiny?", confirmClearActive:"¿Borrar todo el registro activo?", confirmClearShiny:"¿Borrar todo el historial shiny?", confirmClearAll:"¿Borrar todo? Esto elimina la entrada actual y el Registro activo, pero mantiene el Historial shiny.", noActive:"Todavía no hay entradas guardadas en el registro activo.", noShiny:"Todavía no hay resultados shiny guardados.", modeLockedMsg:"Para cambiar entre Static y Wild, primero borra el Registro activo.", strictMismatch:"Este resultado pegado no coincide con tu objetivo actual. Si tu objetivo es Static, todos los resultados pegados también deben ser Static. Si tu objetivo es Wild, todos los resultados pegados también deben ser Wild.", needStaticChoice:"Elige una Categoría Static y un Pokémon Static antes de guardar una cacería Static.", autoWild:"Resultado Wild detectado automáticamente.", autoStatic:"Resultado Static detectado automáticamente.", savePrompt1:"¡Felicidades! 🎉 Escribe la calibración de ms que quieres guardar para este shiny:", savePrompt2:"Ahora escribe la calibración de avances para este shiny:", shinySaved:"¡Felicidades por el shiny! 🎉 Se guardó en el Historial shiny y el registro activo se reinició para tu próxima cacería.", shinyAlert:"¡Felicidades por el shiny! 🎉 Se guardó en el Historial shiny y tu registro activo fue reiniciado.", resetNote:'Cuando usas <strong>¿Salió shiny?</strong>, el shiny se guarda en su propia pestaña y el registro activo se reinicia para que empieces la siguiente cacería limpio.', importShinySuccess:"El Historial shiny se importó correctamente.", importShinyError:"Ese archivo no se pudo importar como JSON del Historial shiny."
+      },
+      fr: { pageTitle:"Mixi's Pokemon Tracker", versionLabel:"Version 1.0", langLabel:"Langue", addEntry:"Ajouter une entrée", saveBtn:"Enregistrer l'entrée", useLast:"Utiliser la dernière calibration", redoHunt:"Recommencer la chasse", clearForm:"Effacer le formulaire", clearAll:"Tout effacer", shinyBtn:"✨ Est-ce shiny ?", activeTab:"Journal actif", shinyTab:"Historique shiny", activeLogTitle:"Journal actif", shinyHistoryTitle:"Historique shiny", importShiny:"Importer historique shiny JSON", continueFrames:"Continue Screen Frames", hunting:"Hunting", hitting:"Hitting" },
+      it: { pageTitle:"Mixi's Pokemon Tracker", versionLabel:"Versione 2.0", langLabel:"Lingua", addEntry:"Aggiungi voce", saveBtn:"Salva voce", useLast:"Usa ultima calibrazione", redoHunt:"Rifai caccia", clearForm:"Pulisci modulo", clearAll:"Cancella tutto", shinyBtn:"✨ È uscito shiny?", activeTab:"Registro attivo", shinyTab:"Cronologia shiny", activeLogTitle:"Registro attivo", shinyHistoryTitle:"Cronologia shiny", importShiny:"Importa cronologia shiny JSON", continueFrames:"Continue Screen Frames", hunting:"Hunting", hitting:"Hitting" },
+      de: { pageTitle:"Mixi's Pokemon Tracker", versionLabel:"Version 1.0", langLabel:"Sprache", addEntry:"Eintrag hinzufügen", saveBtn:"Eintrag speichern", useLast:"Letzte Kalibrierung verwenden", redoHunt:"Jagd wiederholen", clearForm:"Formular leeren", clearAll:"Alles löschen", shinyBtn:"✨ War es shiny?", activeTab:"Aktives Jagdprotokoll", shinyTab:"Shiny-Verlauf", activeLogTitle:"Aktives Jagdprotokoll", shinyHistoryTitle:"Shiny-Verlauf", importShiny:"Shiny-Verlauf JSON importieren", continueFrames:"Continue Screen Frames", hunting:"Hunting", hitting:"Hitting" },
+      ja: { pageTitle:"Mixi's Pokemon Tracker", versionLabel:"バージョン 2.0", langLabel:"言語", addEntry:"エントリー追加", saveBtn:"エントリーを保存", useLast:"前回の補正を使う", redoHunt:"同じ厳選をやり直す", clearForm:"フォームをクリア", clearAll:"すべて消去", shinyBtn:"✨ 色違いでしたか？", activeTab:"アクティブログ", shinyTab:"色違い履歴", activeLogTitle:"アクティブログ", shinyHistoryTitle:"色違い履歴", importShiny:"色違い履歴 JSON を読み込む", continueFrames:"Continue Screen Frames", hunting:"Hunting", hitting:"Hitting" },
+    };
+
+    function tr(key, ...args){
+      const dict = t[currentLanguage] || t.en;
+      const value = dict[key] ?? t.en[key] ?? key;
+      return typeof value === 'function' ? value(...args) : value;
+    }
+
+    function loadStored(key){
+      try{
+        const raw=localStorage.getItem(key);
+        return raw?JSON.parse(raw):[];
+      }catch{return []}
+    }
+
+    function saveStored(key,data){ localStorage.setItem(key,JSON.stringify(data)); }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#39;');
+    }
+
+    function saveLastCalibrations(msCal,advCal){
+      localStorage.setItem(LAST_CAL_KEY,JSON.stringify({msCalibration:msCal,advancesCalibration:advCal}));
+    }
+
+    function loadLastCalibrations(){
+      try{
+        const raw=localStorage.getItem(LAST_CAL_KEY);
+        return raw?JSON.parse(raw):null;
+      }catch{return null}
+    }
+
+    function setStatus(message, type=''){
+      parseStatus.className='status-box' + (type ? ' ' + type : '');
+      parseStatus.innerHTML=message;
+    }
+
+    function getLatestTarget(){
+      const hunting = entries.filter(e => e.entryType === 'hunting');
+      return hunting.length ? hunting[hunting.length - 1] : null;
+    }
+
+    function getLatestHitting(){
+      const hitting = entries.filter(e => e.entryType === 'hitting');
+      return hitting.length ? hitting[hitting.length - 1] : null;
+    }
+
+    function getActiveHuntMode(){
+      const target = getLatestTarget();
+      if(target && target.huntMode) return target.huntMode;
+      return entries.length ? (entries[0].huntMode || 'wild') : null;
+    }
+
+    function detectPasteMode(tokens){
+      const hasSpeciesToken = !!((tokens[3] || '').trim()) && /:\s*.+/.test((tokens[3] || '').trim());
+      const hasLevelToken = /^\d+$/.test((tokens[4] || '').trim());
+      return (hasSpeciesToken && hasLevelToken) ? 'wild' : 'static';
+    }
+
+    function populateStaticCategoryOptions(){
+      const current = staticCategory.value;
+      const options = ['<option value="">' + tr('chooseCategory') + '</option>']
+        .concat(Object.keys(STATIC_OPTIONS).map(k => '<option value="' + escapeHtml(k) + '">' + escapeHtml(k) + '</option>'));
+      staticCategory.innerHTML = options.join('');
+      if (STATIC_OPTIONS[current]) staticCategory.value = current;
+    }
+
+    function populateStaticPokemonOptions(category){
+      const list = STATIC_OPTIONS[category] || [];
+      const options = ['<option value="">' + tr('choosePokemon') + '</option>']
+        .concat(list.map(p => '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>'));
+      staticPokemon.innerHTML = options.join('');
+    }
+
+    function showStaticPickers(){
+      const activeMode = getActiveHuntMode();
+      if(activeMode) return activeMode === 'static';
+      return parsedCache?.huntMode === 'static';
+    }
+
+    function renderStaticPickerVisibility(){
+      staticPickerRow.style.display = showStaticPickers() ? 'grid' : 'none';
+    }
+
+    function updateHuntModeLock(){
+      staticCategory.disabled = !showStaticPickers();
+      staticPokemon.disabled = !showStaticPickers();
+    }
+
+    function syncEntryTypeState(){
+      const hasTarget = !!getLatestTarget();
+      entryType.options[0].disabled = hasTarget;
+      if(hasTarget){
+        entryType.value = 'hitting';
+      } else {
+        entryType.value = 'hunting';
+      }
+    }
+
+    function normalizePokemonName(speciesText){
+      if(!speciesText) return '';
+      let name = speciesText.trim();
+      const map = {
+        'Nidoran♀':'nidoran-f','Nidoran♂':'nidoran-m',"Farfetch'd":'farfetchd','Farfetch’d':'farfetchd',
+        'Mr. Mime':'mr-mime','Mime Jr.':'mime-jr','Ho-Oh':'ho-oh','Porygon-Z':'porygon-z'
+      };
+      return map[name] || name.toLowerCase().replace(/\./g,'').replace(/[’']/g,'').replace(/\s+/g,'-');
+    }
+
+    function findNature(tokens){
+      for(const token of tokens){
+        const clean = String(token || '').trim();
+        if(NATURES.has(clean)) return clean;
+      }
+      return '';
+    }
+
+    function formatDifference(current,target){
+      if(current===null||target===null||Number.isNaN(current)||Number.isNaN(target)) return '<span class="help">N/A</span>';
+      const diff=current-target;
+      if(diff===0) return `<span class="diff-good">${tr('exact')}</span>`;
+      const sign=diff>0?'+':'';
+      if(Math.abs(diff)===1) return `<span class="diff-yellow">${sign}${diff}</span>`;
+      if(Math.abs(diff)<=3) return `<span class="diff-orange">${sign}${diff}</span>`;
+      return `<span class="diff-bad">${sign}${diff}</span>`;
+    }
+
+    function extractParenMs(seedMs){
+      const m = String(seedMs || '').match(/\(\s*([+-]?\d+)ms\s*\)/i);
+      return m ? Number(m[1]) : null;
+    }
+
+    function seedMsClass(currentSeedMs, targetSeedMs){
+      const current = extractParenMs(currentSeedMs);
+      const target = extractParenMs(targetSeedMs);
+      if(current === null || target === null) return '';
+      const diff = Math.abs(current - target);
+      if(diff === 0) return 'seed-exact';
+      if(diff <= 20) return 'frame-close-1';
+      if(diff <= 100) return 'frame-close-2';
+      return '';
+    }
+
+    function seedClass(current,target){
+      if(!current || !target) return '';
+      return current===target ? 'seed-exact' : '';
+    }
+
+    function frameClass(current,target){
+      const diff=Math.abs(Number(current)-Number(target));
+      if(Number.isNaN(diff)) return '';
+      if(diff===0) return 'frame-exact';
+      if(diff===1) return 'frame-close-1';
+      if(diff<=3) return 'frame-close-2';
+      return '';
+    }
+
+    function clearForm(){
+      tenLinesInput.value='';
+      genderDisplay.value='';
+      msCalibration.value='';
+      advCalibration.value='';
+      entryType.value='hunting';
+      parsedCache=null;
+
+      const activeMode = getActiveHuntMode();
+      if(activeMode){
+        setStatus(tr('modeLockedMsg'),'error');
+        alert(tr('modeLockedMsg'));
+        return;
+      }
+
+      staticCategory.value='';
+      populateStaticPokemonOptions('');
+      staticPokemon.value='';
+      renderStaticPickerVisibility();
+      updateHuntModeLock();
+      setStatus(tr('idleStatus'));
+    }
+
+    function redoHunt(){
+      const target = getLatestTarget();
+      tenLinesInput.value='';
+      genderDisplay.value='';
+      parsedCache=null;
+
+      if(target){
+        entries = entries.filter(e => e.entryType === 'hunting');
+        saveStored(ACTIVE_STORAGE_KEY, entries);
+        entryType.value='hitting';
+        huntModeLocked = true;
+        if(target.huntMode === 'static'){
+          renderStaticPickerVisibility();
+        }
+      }
+
+      setStatus(tr('idleStatus'));
+      syncEntryTypeState();
+      renderAll();
+    }
+
+    function parseTenLines(text){
+      const trimmed=text.trim();
+      if(!trimmed) throw new Error(tr('needPaste'));
+
+      const tokens = trimmed.split(/\t+/);
+      if(tokens.length<4) throw new Error(tr('badLine'));
+
+      const detectedMode = detectPasteMode(tokens);
+      const activeMode = getActiveHuntMode();
+      const currentTarget = getLatestTarget();
+
+      if(currentTarget && detectedMode !== (currentTarget.huntMode || activeMode)){
+        huntModeLocked = true;
+        updateHuntModeLock();
+        throw new Error(tr('strictMismatch'));
+      }
+
+      if(!currentTarget && activeMode && detectedMode !== activeMode){
+        huntModeLocked = true;
+        updateHuntModeLock();
+        throw new Error(tr('modeLockedMsg'));
+      }
+
+      const extractedSeedMs=(tokens[0]||'').trim();
+      const extractedContinueFrames=(tokens[2]||'').trim();
+      const extractedSlotSpecies=(tokens[3]||'').trim();
+      const extractedLevel=(detectedMode === 'wild' ? (tokens[4]||'').trim() : '');
+      const extractedGender=(tokens[tokens.length-1]||'').trim();
+      const extractedNature=findNature(tokens);
+
+      if(!/^[0-9A-Fa-f]{4}\s*\|\s*\d+ms\s*\(\s*[+-]?\d+ms\s*\)$/.test(extractedSeedMs)) throw new Error(tr('badSeed'));
+      if(!/^\d+$/.test(extractedContinueFrames)) throw new Error(tr('badFrames'));
+      if(detectedMode === 'wild' && !/^\d+$/.test(extractedLevel)) throw new Error(tr('badLevel'));
+
+      let cleanGender=extractedGender;
+      if(!['♂','♀','Genderless','-','?'].includes(cleanGender)) cleanGender=extractedGender||'?';
+
+      let speciesDisplay = '';
+      let slotSpecies = extractedSlotSpecies;
+      if(detectedMode === 'wild'){
+        speciesDisplay = extractedSlotSpecies.replace(/^\d+\s*:\s*/,'').trim();
+      } else {
+        const activeStaticSpecies = currentTarget?.speciesDisplay || staticPokemon.value;
+        speciesDisplay = activeStaticSpecies || '';
+        slotSpecies = speciesDisplay || '';
+      }
+
+      return {
+        huntMode: detectedMode,
+        seedMs: extractedSeedMs,
+        continueFrames: extractedContinueFrames,
+        level: extractedLevel,
+        slotSpecies,
+        speciesDisplay,
+        speciesApiName: normalizePokemonName(speciesDisplay),
+        gender: cleanGender,
+        nature: extractedNature || ''
+      };
+    }
+
+    function parseFromTextarea(){
+      const parsed=parseTenLines(tenLinesInput.value);
+      parsedCache=parsed;
+      genderDisplay.value=parsed.gender||'';
+      renderStaticPickerVisibility();
+
+      if(parsed.huntMode === 'static'){
+        populateStaticCategoryOptions();
+        if(staticCategory.value){
+          populateStaticPokemonOptions(staticCategory.value);
+        } else {
+          populateStaticPokemonOptions('');
+        }
+      }
+
+      updateHuntModeLock();
+      const autoMsg = parsed.huntMode === 'wild' ? tr('autoWild') : tr('autoStatic');
+      setStatus(`${autoMsg}<br>${tr('parseOk')}`,'ok');
+      return parsed;
+    }
+
+    async function fetchSpriteHtml(speciesApiName, speciesDisplay){
+      if(!speciesApiName){
+        return `<div class="sprite-card"><div class="help">${tr('spriteUnavailable')}</div></div>`;
+      }
+      try{
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(speciesApiName)}`);
+        if(!res.ok) throw new Error('sprite');
+        const data = await res.json();
+        const sprite = data?.sprites?.front_shiny
+          || data?.sprites?.other?.['official-artwork']?.front_shiny
+          || data?.sprites?.front_default
+          || data?.sprites?.other?.['official-artwork']?.front_default;
+        if(!sprite) throw new Error('sprite');
+        return `<div class="sprite-card"><div class="help">${tr('spriteLabel')}</div><img src="${sprite}" alt="${escapeHtml(speciesDisplay)}"><div>${escapeHtml(speciesDisplay)}</div></div>`;
+      }catch{
+        return `<div class="sprite-card"><div class="help">${tr('spriteUnavailable')}</div><div>${escapeHtml(speciesDisplay || '')}</div></div>`;
+      }
+    }
+
+    async function renderTarget(){
+      const target=getLatestTarget();
+      const targetTitle=document.getElementById('targetTitle');
+
+      if(!target){
+        targetTitle.textContent=tr('targetTitle');
+        targetState.innerHTML=`<p class="help">${tr('noTarget')}</p>`;
+        renderStaticPickerVisibility();
+        return;
+      }
+
+      targetTitle.textContent=tr('targetTitleWithName', target.speciesDisplay || (target.huntMode === 'static' ? (target.speciesDisplay || tr('static')) : 'Unknown'));
+      const spriteHtml = await fetchSpriteHtml(target.speciesApiName, target.speciesDisplay);
+
+      targetState.innerHTML=`
+        <div class="target-box">
+          ${spriteHtml}
+          <div class="target-stats">
+            <div class="stat"><div class="k">${tr('targetSpecies')}</div><div class="v">${escapeHtml(target.speciesDisplay || '')}</div></div>
+            <div class="stat"><div class="k">${tr('targetSeed')}</div><div class="v">${escapeHtml(target.seedMs)}</div></div>
+            <div class="stat"><div class="k">${tr('targetFrames')}</div><div class="v">${escapeHtml(target.continueFrames)}</div></div>
+            <div class="stat"><div class="k">${tr('targetLevel')}</div><div class="v">${escapeHtml(target.huntMode === 'static' ? 'N/A' : target.level)}</div></div>
+            <div class="stat"><div class="k">${tr('targetGender')}</div><div class="v">${escapeHtml(target.gender || '?')}</div></div>
+            <div class="stat"><div class="k">${tr('nature')}</div><div class="v">${escapeHtml(target.nature || '')}</div></div>
+            <div class="stat"><div class="k">${tr('targetCal')}</div><div class="v">ms: ${escapeHtml(target.msCalibration)} | Advances: ${escapeHtml(target.advancesCalibration)}</div></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderComparison(){
+      const target=getLatestTarget();
+      const hit=getLatestHitting();
+
+      if(!target||!hit){
+        comparisonContent.innerHTML=tr('noComparison');
+        return;
+      }
+
+      const targetFrames=Number(target.continueFrames);
+      const hitFrames=Number(hit.continueFrames);
+      const targetLevel=target.huntMode === 'static' ? null : Number(target.level);
+      const hitLevel=hit.huntMode === 'static' ? null : Number(hit.level);
+      const seedMatch=target.seedMs===hit.seedMs;
+      const genderMatch=String(target.gender||'')===String(hit.gender||'');
+
+      comparisonContent.innerHTML=`
+        <div class="row">
+          <div class="stat"><div class="k">${tr('targetSeed')}</div><div class="v">${escapeHtml(target.seedMs)}</div></div>
+          <div class="stat"><div class="k">${tr('latestHitSeed')}</div><div class="v">${escapeHtml(hit.seedMs)}</div></div>
+        </div>
+        <div class="row">
+          <div class="stat"><div class="k">${tr('seedMatch')}</div><div class="v">${seedMatch?`<span class="diff-good">${tr('yes')}</span>`:`<span class="diff-bad">${tr('no')}</span>`}</div></div>
+          <div class="stat"><div class="k">${tr('framesDiff')}</div><div class="v">${formatDifference(hitFrames,targetFrames)}</div></div>
+        </div>
+        <div class="row">
+          <div class="stat"><div class="k">${tr('levelDiff')}</div><div class="v">${formatDifference(hitLevel,targetLevel)}</div></div>
+          <div class="stat"><div class="k">${tr('genderMatch')}</div><div class="v">${genderMatch?`<span class="diff-good">${tr('yes')}</span>`:`<span class="diff-bad">${tr('no')}</span>`}</div></div>
+        </div>
+        <div class="row">
+          <div class="stat"><div class="k">${tr('nature')}</div><div class="v">${escapeHtml(hit.nature || '')}</div></div>
+          <div class="stat"><div class="k">${tr('targetSpecies')} ${tr('nature')}</div><div class="v">${escapeHtml(target.nature || '')}</div></div>
+        </div>
+      `;
+    }
+
+    function entryMatchesTarget(entry,target){
+      if(!entry || !target) return false;
+      return entry.seedMs===target.seedMs &&
+             Number(entry.continueFrames)===Number(target.continueFrames) &&
+             Number(entry.level||0)===Number(target.level||0) &&
+             String(entry.gender||'')===String(target.gender||'');
+    }
+
+    function renderActiveTable(){
+      if(!entries.length){
+        tableWrap.innerHTML=`<p class="help">${tr('noActive')}</p>`;
+        return;
+      }
+
+      const target=getLatestTarget();
+      const rows=entries.map((entry,index)=>{
+        const isMatch=entry.entryType==='hitting'&&entryMatchesTarget(entry,target);
+        const seedCls = entry.entryType==='hitting' && target ? seedMsClass(entry.seedMs,target.seedMs) : '';
+        const frameCls = entry.entryType==='hitting' && target ? frameClass(entry.continueFrames,target.continueFrames) : '';
+        const typeLabel=`<span class="pill ${entry.entryType}">${entry.entryType==='hunting'?tr('huntingPill'):tr('hittingPill')}</span>`;
+        return `
+          <tr>
+            <td>${index+1}</td>
+            <td>${typeLabel}</td>
+            <td>${escapeHtml(String(entry.huntMode === 'static' ? tr('static') : tr('wild')).replace(/^./, c => c.toUpperCase()))}</td>
+            <td>${escapeHtml(entry.speciesDisplay || (entry.huntMode === 'static' ? tr('static') : ''))}</td>
+            <td>${isMatch?`<span class="seed-exact">${tr('matchFound')}</span>`:''}</td>
+            <td class="${seedCls}">${escapeHtml(entry.seedMs)}</td>
+            <td class="${frameCls}">${escapeHtml(entry.continueFrames)}</td>
+            <td>${escapeHtml(entry.huntMode === 'static' ? 'N/A' : entry.level)}</td>
+            <td>${escapeHtml(entry.gender || '?')}</td>
+            <td>${escapeHtml(entry.nature || '')}</td>
+            <td>${escapeHtml(entry.msCalibration)}</td>
+            <td>${escapeHtml(entry.advancesCalibration)}</td>
+            <td><button class="smallbtn danger" onclick="deleteActiveEntry(${index})">${tr('delete')}</button></td>
+          </tr>
+        `;
+      }).join('');
+
+      tableWrap.innerHTML=`
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>${tr('type')}</th>
+              <th>${tr('huntKind')}</th>
+              <th>${tr('species')}</th>
+              <th>${tr('match')}</th>
+              <th>${tr('seedMs')}</th>
+              <th>${tr('continueFrames')}</th>
+              <th>${tr('level')}</th>
+              <th>${tr('gender')}</th>
+              <th>${tr('nature')}</th>
+              <th>${tr('msCal')}</th>
+              <th>${tr('advCal')}</th>
+              <th>${tr('delete')}</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function renderShinyTable(){
+      if(!shinyEntries.length){
+        shinyTableWrap.innerHTML=`<p class="help">${tr('noShiny')}</p>`;
+        return;
+      }
+
+      const rows=shinyEntries.map((entry,index)=>`
+        <tr>
+          <td>${index+1}</td>
+          <td><span class="pill shiny">${tr('shinyPill')}</span></td>
+          <td>${escapeHtml(String(entry.huntMode === 'static' ? tr('static') : tr('wild')).replace(/^./, c => c.toUpperCase()))}</td>
+          <td>${escapeHtml(entry.speciesDisplay || (entry.huntMode === 'static' ? tr('static') : ''))}</td>
+          <td>${escapeHtml(entry.seedMs)}</td>
+          <td>${escapeHtml(entry.continueFrames)}</td>
+          <td>${escapeHtml(entry.huntMode === 'static' ? 'N/A' : entry.level)}</td>
+          <td>${escapeHtml(entry.gender || '?')}</td>
+          <td>${escapeHtml(entry.nature || '')}</td>
+          <td>${escapeHtml(entry.attempts ?? '')}</td>
+          <td>${escapeHtml(entry.msCalibration)}</td>
+          <td>${escapeHtml(entry.advancesCalibration)}</td>
+          <td><button class="smallbtn danger" onclick="deleteShinyEntry(${index})">${tr('delete')}</button></td>
+        </tr>
+      `).join('');
+
+      shinyTableWrap.innerHTML=`
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>${tr('type')}</th>
+              <th>${tr('huntKind')}</th>
+              <th>${tr('species')}</th>
+              <th>${tr('seedMs')}</th>
+              <th>${tr('continueFrames')}</th>
+              <th>${tr('level')}</th>
+              <th>${tr('gender')}</th>
+              <th>${tr('nature')}</th>
+              <th>${tr('attempts')}</th>
+              <th>${tr('msCal')}</th>
+              <th>${tr('advCal')}</th>
+              <th>${tr('delete')}</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    async function renderAll(){
+      applyTranslations();
+      renderStaticPickerVisibility();
+      updateHuntModeLock();
+      syncEntryTypeState();
+      await renderTarget();
+      renderComparison();
+      renderActiveTable();
+      renderShinyTable();
+    }
+
+    function saveEntry(){
+      try{
+        const parsed=parsedCache||parseFromTextarea();
+        const currentTarget = getLatestTarget();
+
+        if(currentTarget && parsed.huntMode !== (currentTarget.huntMode || 'wild')){
+          setStatus(tr('strictMismatch'),'error');
+          alert(tr('strictMismatch'));
+          return;
+        }
+
+        if(parsed.huntMode === 'static'){
+          const chosenStatic = currentTarget?.speciesDisplay || staticPokemon.value;
+          if(!chosenStatic){
+            setStatus(tr('needStaticChoice'),'error');
+            alert(tr('needStaticChoice'));
+            return;
+          }
+          parsed.speciesDisplay = chosenStatic;
+          parsed.slotSpecies = chosenStatic;
+          parsed.speciesApiName = normalizePokemonName(chosenStatic);
+        }
+
+        if(msCalibration.value===''||advCalibration.value===''){
+          setStatus(tr('needCal'),'error');
+          alert(tr('needCal'));
+          return;
+        }
+
+        const wasHunting = entryType.value === 'hunting';
+
+        const entry={
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2),
+          entryType: entryType.value,
+          huntMode: parsed.huntMode || 'wild',
+          seedMs: parsed.seedMs,
+          continueFrames: parsed.continueFrames,
+          level: parsed.level,
+          gender: parsed.gender,
+          nature: parsed.nature || '',
+          slotSpecies: parsed.slotSpecies,
+          speciesDisplay: parsed.speciesDisplay,
+          speciesApiName: parsed.speciesApiName,
+          msCalibration: String(msCalibration.value).trim(),
+          advancesCalibration: String(advCalibration.value).trim()
+        };
+
+        entries.push(entry);
+        saveStored(ACTIVE_STORAGE_KEY,entries);
+        saveLastCalibrations(entry.msCalibration,entry.advancesCalibration);
+
+        tenLinesInput.value='';
+        genderDisplay.value='';
+        parsedCache=null;
+
+        if(wasHunting){
+          entryType.value='hitting';
+          huntModeLocked = true;
+          renderStaticPickerVisibility();
+          updateHuntModeLock();
+        }
+
+        setStatus(tr('saveOk'),'ok');
+        renderAll();
+      }catch(err){
+        setStatus(escapeHtml(err.message),'error');
+        alert(err.message);
+      }
+    }
+
+    function logShiny() {
+      try {
+        const target = getLatestTarget();
+        if (!target) {
+          setStatus(tr('needTarget'), 'error');
+          alert(tr('needTarget'));
+          return;
+        }
+        const msCal = prompt(tr('savePrompt1'), '');
+        if (msCal === null || msCal.trim() === '') return;
+        const advCal = prompt(tr('savePrompt2'), '');
+        if (advCal === null || advCal.trim() === '') return;
+
+        const shinyEntry = {
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2),
+          huntMode: target.huntMode || 'wild',
+          speciesDisplay: target.speciesDisplay,
+          speciesApiName: target.speciesApiName,
+          seedMs: target.seedMs,
+          continueFrames: target.continueFrames,
+          level: target.level,
+          gender: target.gender,
+          nature: target.nature || '',
+          slotSpecies: target.slotSpecies,
+          attempts: entries.length,
+          msCalibration: String(msCal).trim(),
+          advancesCalibration: String(advCal).trim()
+        };
+
+        shinyEntries.push(shinyEntry);
+        saveStored(SHINY_STORAGE_KEY, shinyEntries);
+        saveLastCalibrations(shinyEntry.msCalibration, shinyEntry.advancesCalibration);
+
+        entries = [];
+        saveStored(ACTIVE_STORAGE_KEY, entries);
+        parsedCache = null;
+        tenLinesInput.value = '';
+        genderDisplay.value = '';
+        msCalibration.value = '';
+        advCalibration.value = '';
+        entryType.value = 'hunting';
+        huntModeLocked = false;
+        staticCategory.value = '';
+        populateStaticPokemonOptions('');
+        staticPokemon.value = '';
+        renderStaticPickerVisibility();
+        updateHuntModeLock();
+        setStatus(tr('shinySaved'), 'ok');
+        syncEntryTypeState();
+        renderAll();
+        alert(tr('shinyAlert'));
+      } catch(err) {
+        setStatus(escapeHtml(err.message), 'error');
+        alert(err.message);
+      }
+    }
+
+    window.deleteActiveEntry=function(index){
+      if(!confirm(tr('confirmDeleteActive'))) return;
+      entries.splice(index,1);
+      saveStored(ACTIVE_STORAGE_KEY,entries);
+      renderAll();
+    }
+
+    window.deleteShinyEntry=function(index){
+      if(!confirm(tr('confirmDeleteShiny'))) return;
+      shinyEntries.splice(index,1);
+      saveStored(SHINY_STORAGE_KEY,shinyEntries);
+      renderAll();
+    }
+
+    function clearActiveSession(){
+      if(!confirm(tr('confirmClearActive'))) return;
+      entries=[];
+      saveStored(ACTIVE_STORAGE_KEY,entries);
+      huntModeLocked=false;
+      parsedCache=null;
+      tenLinesInput.value='';
+      genderDisplay.value='';
+      msCalibration.value='';
+      advCalibration.value='';
+      entryType.value='hunting';
+      staticCategory.value='';
+      populateStaticPokemonOptions('');
+      staticPokemon.value='';
+      renderStaticPickerVisibility();
+      updateHuntModeLock();
+      syncEntryTypeState();
+      renderAll();
+    }
+
+    function clearShinyHistory(){
+      if(!confirm(tr('confirmClearShiny'))) return;
+      shinyEntries=[];
+      saveStored(SHINY_STORAGE_KEY,shinyEntries);
+      renderAll();
+    }
+
+    function clearAllData(){
+      if(!confirm(tr('confirmClearAll'))) return;
+      entries = [];
+      saveStored(ACTIVE_STORAGE_KEY, entries);
+      tenLinesInput.value = '';
+      genderDisplay.value = '';
+      msCalibration.value = '';
+      advCalibration.value = '';
+      entryType.value = 'hunting';
+      parsedCache = null;
+      huntModeLocked = false;
+      staticCategory.value = '';
+      populateStaticPokemonOptions('');
+      staticPokemon.value = '';
+      renderStaticPickerVisibility();
+      updateHuntModeLock();
+      setStatus(tr('idleStatus'));
+      renderAll();
+    }
+
+    function importShinyHistoryFromFile(file){
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const parsed = JSON.parse(reader.result);
+          if(!Array.isArray(parsed)) throw new Error('bad');
+          shinyEntries = parsed;
+          saveStored(SHINY_STORAGE_KEY, shinyEntries);
+          setStatus(tr('importShinySuccess'),'ok');
+          renderAll();
+        }catch{
+          setStatus(tr('importShinyError'),'error');
+          alert(tr('importShinyError'));
+        }
+      };
+      reader.onerror = () => {
+        setStatus(tr('importShinyError'),'error');
+        alert(tr('importShinyError'));
+      };
+      reader.readAsText(file);
+    }
+
+    function exportJson(data,filename){
+      const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function applyTranslations(){
+      document.documentElement.lang=currentLanguage;
+      document.getElementById('pageTitle').textContent=tr('pageTitle');
+      document.getElementById('versionBadge').textContent=tr('versionLabel');
+      document.getElementById('topNote').innerHTML=tr('topNote');
+      document.getElementById('addEntryTitle').textContent=tr('addEntry');
+      document.getElementById('pasteLabel').textContent=tr('pasteLabel');
+      document.getElementById('entryTypeLabel').textContent=tr('entryTypeLabel');
+      entryType.options[0].text=tr('hunting');
+      entryType.options[1].text=tr('hitting');
+      document.getElementById('genderLabel').textContent=tr('genderLabel');
+      document.getElementById('msLabel').textContent=tr('msLabel');
+      document.getElementById('advLabel').textContent=tr('advLabel');
+      document.getElementById('saveBtn').textContent=tr('saveBtn');
+      document.getElementById('loadLastCalBtn').textContent=tr('useLast');
+      document.getElementById('redoHuntBtn').textContent=tr('redoHunt');
+      document.getElementById('clearInputBtn').textContent=tr('clearForm');
+      document.getElementById('clearAllBtn').textContent=tr('clearAll');
+      document.getElementById('importShinyBtn').textContent=tr('importShiny');
+      document.getElementById('shinyBtn').textContent=tr('shinyBtn');
+      document.getElementById('resetNote').innerHTML=tr('resetNote');
+      document.getElementById('howTitle').textContent=tr('howTitle');
+      document.getElementById('how1').innerHTML=tr('how1');
+      document.getElementById('how2').innerHTML=tr('how2');
+      document.getElementById('how3').innerHTML=tr('howRedo');
+      document.getElementById('how4').innerHTML=tr('how3');
+      document.getElementById('how5').innerHTML=tr('howClearAll');
+      document.getElementById('how6').innerHTML=tr('how4');
+      document.getElementById('staticCategoryLabel').textContent=tr('staticCategoryLabel');
+      document.getElementById('staticPokemonLabel').textContent=tr('staticPokemonLabel');
+      populateStaticCategoryOptions();
+      populateStaticPokemonOptions(staticCategory.value);
+      document.getElementById('comparisonTitle').textContent=tr('comparisonTitle');
+      document.getElementById('activeTabBtn').textContent=tr('activeTab');
+      document.getElementById('shinyTabBtn').textContent=tr('shinyTab');
+      document.getElementById('activeLogTitle').textContent=tr('activeLogTitle');
+      document.getElementById('activeLogHelp').textContent=tr('activeLogHelp');
+      document.getElementById('shinyHistoryTitle').textContent=tr('shinyHistoryTitle');
+      document.getElementById('shinyHistoryHelp').textContent=tr('shinyHistoryHelp');
+      document.getElementById('exportBtn').textContent=tr('exportActive');
+      document.getElementById('clearSessionBtn').textContent=tr('clearActive');
+      document.getElementById('exportShinyBtn').textContent=tr('exportShiny');
+      document.getElementById('clearShinyBtn').textContent=tr('clearShiny');
+      if(!parseStatus.classList.contains('ok') && !parseStatus.classList.contains('error')){
+        parseStatus.innerHTML=tr('idleStatus');
+      }
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', saveEntry);
+    document.getElementById('loadLastCalBtn').addEventListener('click', ()=>{
+      const last=loadLastCalibrations();
+      if(!last){
+        setStatus(tr('noLast'),'error');
+        alert(tr('noLast'));
+        return;
+      }
+      msCalibration.value=last.msCalibration;
+      advCalibration.value=last.advancesCalibration;
+      setStatus(tr('loadOk'),'ok');
+    });
+    document.getElementById('redoHuntBtn').addEventListener('click', redoHunt);
+    document.getElementById('clearInputBtn').addEventListener('click', clearForm);
+    document.getElementById('clearAllBtn').addEventListener('click', clearAllData);
+    document.getElementById('shinyBtn').addEventListener('click', logShiny);
+    document.getElementById('clearSessionBtn').addEventListener('click', clearActiveSession);
+    document.getElementById('clearShinyBtn').addEventListener('click', clearShinyHistory);
+    document.getElementById('exportBtn').addEventListener('click', ()=>exportJson(entries,'pokemon_rng_tracker_active_log.json'));
+    document.getElementById('exportShinyBtn').addEventListener('click', ()=>exportJson(shinyEntries,'pokemon_rng_tracker_shiny_history.json'));
+    document.getElementById('importShinyBtn').addEventListener('click', ()=>document.getElementById('importShinyFile').click());
+    document.getElementById('importShinyFile').addEventListener('change', (e)=>{ const file = e.target.files && e.target.files[0]; if(file) importShinyHistoryFromFile(file); e.target.value=''; });
+    staticCategory.addEventListener('change', ()=>populateStaticPokemonOptions(staticCategory.value));
+    staticPokemon.addEventListener('change', ()=>{
+      if(parsedCache?.huntMode === 'static'){
+        parsedCache.speciesDisplay = staticPokemon.value || '';
+        parsedCache.speciesApiName = normalizePokemonName(parsedCache.speciesDisplay);
+        parsedCache.slotSpecies = parsedCache.speciesDisplay;
+      }
+    });
+
+    tenLinesInput.addEventListener('paste', ()=>{
+      setTimeout(()=>{
+        if(!tenLinesInput.value.trim()) return;
+        try{
+          parseFromTextarea();
+        }catch(err){
+          setStatus(escapeHtml(err.message),'error');
+          alert(err.message);
+        }
+      },0);
+    });
+
+    entryType.addEventListener('change', ()=>{
+      if(getLatestTarget() && entryType.value === 'hunting'){
+        entryType.value = 'hitting';
+        setStatus(tr('duplicateHunting'),'error');
+        alert(tr('duplicateHunting'));
+      }
+    });
+
+
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    populateStaticCategoryOptions();
+    renderStaticPickerVisibility();
+    updateHuntModeLock();
+    syncEntryTypeState();
+    renderAll();
+  </script>
+</body>
+</html>
